@@ -95,7 +95,7 @@ Never send `DF` to `8CE5DD03`, and never write to the DFU service `FE59`. See [s
 | `42820001-D3E8-480B-95BB-2A34850D4048` | `42820002`–`42820008` | read | Accessory / pairing data as ASCII strings: `42820002` = the light's ANT+ device number (decimal, matches the number shown on the bike computer); `42820004` = **Bluetooth address of the paired MJ-6558 remote** (12 hex digits, no colons); `42820003`/`42820005` = `000000000000`, probably empty slots for further accessories (e.g. Di2); `42820006`–`08` empty. The `2901` descriptors were not read |
 | `FE59` Nordic Secure DFU | `8EC90003-F315-4F60-9FB8-838830DAEA50` | write, indicate | Buttonless DFU. **Never write** |
 
-The advertising contains the Xingzhe light service short UUID `25D4`. The light keeps advertising while another client is connected.
+The advertising contains the Xingzhe light service short UUID `25D4` and service data on `FFE1` (`16 01 00 <x> 02 00 00 64`, meaning unknown). The light keeps advertising while another client is connected, but not while the transport lock is on.
 
 ---
 
@@ -295,6 +295,7 @@ Examples (as sent by the official app):
 - `A4` and the standard `2A19` both read 100 on a full battery. Whether `2A19` resolves finer steps during a discharge is not yet measured.
 - **Below 10 %, the light switches to the lowest low-beam level and cannot be changed** (manual). Whether BLE commands still work then is not measured.
 - Charging takes about 3 h at 5 V / 2 A. The manual does not state the battery capacity.
+- **While charging**, BLE and the remote keep working, and the light can be switched on. The status shows the normal off/on mode; the spec's "charging" mode (`17`, decimal 23) was not reported.
 - On the non-UT EVO 1700, lenne0815 measured a full discharge in which `B4` only reported 100 → 50 → 30.
 
 **Output and runtime** (manual, ANSI FL1, 25 °C, 25 km/h airflow):
@@ -328,7 +329,7 @@ These runtimes allow a software estimate of the remaining runtime. The manual do
 | click | on | next level LOW → MEDIUM → HIGH |
 | double click | on | low beam ↔ high beam |
 | click | off | show battery level for 3 s |
-| hold 3 s | off | transport lock on; unlock by holding 3 s or connecting the charger |
+| hold 3 s | off | transport lock on; unlock by holding 3 s or connecting the charger. **While locked, the light is radio-silent**: no advertising, no BLE connection, remote ignored |
 | click, then hold 3 s | off | clear pairing memory (remote / Di2) per manual; other Magicshine manuals say 10 s, not verified on the UT |
 
 **MJ-6558 remote**, measured via the `8CE5DD02` status with factory modes:
@@ -381,7 +382,7 @@ These runtimes allow a software estimate of the remaining runtime. The manual do
 ## 11. Connections, ANT+ and bike computers
 
 - **The light accepts at least two simultaneous BLE connections.** Confirmed with an HCI capture on the iPhone: the Magicshine app stayed connected for almost 5 minutes without interruption, while a Mac connected seven times in between and read characteristics; the light answered both. Connecting as a second client took 7–10 s instead of about 5 s.
-- **The remote keeps working while a client is connected.** In a systematic test, every remote action worked with no client, with a Mac connected (with and without `00`) and with the Magicshine app connected: level changes, full beam, off, and on again after up to about 3 minutes off. In one earlier session, switching on with the remote failed repeatedly while a Mac was connected; that session had connected while the light was off. The cause is unknown and could not be reproduced.
+- **The remote keeps working while a client is connected.** In a systematic test, every remote action worked with no client, with a Mac connected (with and without `00`) and with the Magicshine app connected: level changes, full beam, off, and on again after up to about 3 minutes off. This also holds when the connection was established while the light was off. In one early session, switching on with the remote failed repeatedly; this could not be reproduced since.
 - ANT+ is independent of BLE and of the remote/Di2 pairing. The light supports the ANT+ Lighting Control profile.
 - **Re-pairing via ANT+ on a Karoo does not touch the custom-mode list.**
 - With the Karoo's **"Auto Control"** on, the Karoo switches the light itself via ANT+. It did so right after pairing, going to 50 % and then off.
@@ -393,10 +394,11 @@ These runtimes allow a software estimate of the remaining runtime. The manual do
 1. **Control the light via `8CE5DD03`** (Xingzhe), not via `A2`.
 2. **Never send `A2 … BB` without a matching delete**, and never use it as "off".
 3. **Subscribe to `8CE5DD02` and send `00`.** The status then reports every change, including button presses on the light and the remote. Without `00`, no notifications arrive. Flash modes are not reported.
-4. **Holding the connection is fine.** The remote and the light's button keep working while a client is connected. Re-test if your client connects while the light is off (see [section 11](#11-connections-ant-and-bike-computers)).
+4. **Holding the connection is fine.** The remote and the light's button keep working while a client is connected, also if the connection was made while the light was off.
 5. **Turn off "Auto Control" on the bike computer** when controlling via BLE.
 6. **Show the battery as a step** (high / low / critical), not as a fake percentage. Estimate the remaining runtime from the official runtimes and the time spent per level.
 7. **Repair a light with stray custom modes** with the clean-up recipe in [section 7.1](#71-slot-rules-measured), or by deleting the entries in the Magicshine app.
+8. **Treat a locked light as "not reachable".** With the transport lock on, the light neither advertises nor accepts connections.
 
 ---
 
