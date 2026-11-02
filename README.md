@@ -286,7 +286,7 @@ Examples (as sent by the official app):
 - The light reports only these steps; app and ANT+ bike computers show 100 % for most of a ride and then about 20 %.
 - `A4` and the standard `2A19` both read 100 on a full battery.
 - **Below 10 %, the light switches itself to a very low output** and the button LED flashes red. The manual says the level cannot be changed then. In the single discharge recorded for this document, full output could still be selected by hand, but the light then shut down after about 4 minutes. Whether BLE commands still work in this state was not measured.
-- Charging takes about 3 h at 5 V / 2 A. The manual does not state the battery capacity.
+- Charging takes about 3 h at 5 V / 2 A (manual). The manual does not state the battery capacity. See the example charge below.
 - **While charging**, BLE and the remote keep working, and the light can be switched on. The status shows the normal off/on mode; the spec's "charging" mode (`17`, decimal 23) was not reported.
 - On the non-UT EVO 1700, lenne0815 measured a full discharge in which `B4` only reported 100 → 50 → 30.
 
@@ -301,6 +301,23 @@ Examples (as sent by the official app):
 
 - In this recording, the runtime at full output was about 1 h 40 min, well below the 3 h in the manual (measured at 25 °C with airflow). About 20 minutes of full output remained after the change to "low".
 - These figures come from a single unit under these specific conditions. Runtimes depend on temperature, airflow, battery age and charge level, and other lights may behave differently. Treat the table as an example, not as a specification.
+
+**Example charge** (one recording by the tester, same unit, from empty after the light had shut itself off, 45 W USB-C charger, measured with a USB power meter on the input side):
+
+| Elapsed | Input power | Energy charged |
+|---|---|---|
+| 0:00 | 9.0 W | 0 Wh |
+| 0:30 | 9.7 W | 4.7 Wh |
+| 1:00 | 10.2 W | 9.8 Wh |
+| 1:19 | 10.3 W (peak) | 13.0 Wh |
+| 1:30 | 6.9 W | 14.6 Wh |
+| 2:00 | 3.6 W | 16.9 Wh |
+| 2:30 | 2.5 W | 18.4 Wh |
+| 3:00 | 1.3 W | 19.4 Wh |
+| 3:09 | 0 W (charge ends) | 19.5 Wh |
+
+- In this recording, a full charge took about 3 h 09 min and drew about 19.5 Wh from USB, which matches the manual's 3 h. About two thirds of the energy went in during the first 1 h 20 min. After that, the input power tapered off, which is typical of the switch from constant current to constant voltage.
+- The figures are measured at the USB input and include charging losses, so they do not give the battery capacity directly. The recording contains no BLE values, so it does not show how `A4` or `2A19` change during charging. The same caveats as for the discharge apply.
 
 **Output and runtime** (manual, ANSI FL1, 25 °C, 25 km/h airflow):
 
