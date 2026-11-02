@@ -276,7 +276,7 @@ Examples (as sent by the official app):
 - Moving the slider sends a `BB` preview. **"Save" sends nothing.**
 - Back without saving: an existing mode is restored with `BB`; a newly started mode is deleted with `AA`.
 - Delete (swipe left, bin): `AA` on the entry's slot, then the remaining modes are rewritten to their shifted slots.
-- While the app shows the light's **settings screen**, no other client can find or connect to the light. On the overview screen (battery, temperature), a second connection works.
+- While the app is connected, other clients could not find the light (it stops advertising while a client is connected, see [section 11](#11-connections-ant-and-bike-computers)).
 - The app's "Light Sensor" and "Motion Detection" switches are greyed out for the UT; it apparently has no ambient light sensor.
 
 ---
@@ -380,7 +380,7 @@ These runtimes allow a software estimate of the remaining runtime. The manual do
 
 ## 11. Connections, ANT+ and bike computers
 
-- The light accepted two simultaneous BLE connections (Mac and iPhone app on its overview screen).
+- **Treat the light as single-connection.** While a client is connected, it stops advertising, so a second device cannot find it. An earlier impression that the Magicshine app stayed connected alongside another client was not confirmed and is probably wrong.
 - **While a BLE client was connected, the light did not advertise, and switching it on from off with the remote failed repeatedly.** Without a connection, it worked immediately (tested once).
 - ANT+ is independent of BLE and of the remote/Di2 pairing. The light supports the ANT+ Lighting Control profile.
 - **Re-pairing via ANT+ on a Karoo does not touch the custom-mode list.**
@@ -420,7 +420,6 @@ These came up during the investigation and turned out to be wrong or incomplete:
 - **"`A2` with `00` instead of `BB` sets the light only temporarily."** This was observed on an EVO 1300, but the UT simply ignores such frames.
 - **"The slot byte selects low or high beam."** Wrong. It is a slot number; the beam comes from the frame content.
 - **"`AA` restores the factory modes of the affected beam."** Imprecise. `AA` deletes one slot, and the others shift down.
-- **"The light accepts only one connection."** Wrong. Two connections work, except while the app shows the settings screen.
 - **"The manual's '□ = full output' is a translation error."** Both descriptions are right. □ is full output; the high-beam mode with selectable levels is reached with ○ double click.
 
 ---
