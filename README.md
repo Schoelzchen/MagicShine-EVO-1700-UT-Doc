@@ -181,7 +181,7 @@ Functions `10`–`1A` accept `FF` (or `FFFF`/`FFFFFFFF`) as "read current value"
 - **Latency:** The indication arrives 40–130 ms after the write. This is noticeably faster than control via ANT+.
 - **Button modes stay untouched.** This path never creates custom modes.
 - **Disconnect keeps state.** After `03 00` and a disconnect, the light stays off. It advertises again and accepts a new connection within about 1 s. A new `00` plus `03 0F` switches it back on with the last intensity.
-- **Button presses are reported.** After `00`, every press on the light's button or the remote produces a `8CE5DD02` notification with mode, beam and intensity, also for custom modes. Flash modes are **not** reported. A double click passes through intermediate values before the beam changes. Nothing is sent unsolicited on `FFE0`.
+- **Button presses are reported, but only after `00`.** Subscribing to `8CE5DD02` alone delivers no notifications. After `00`, every press on the light's button or the remote produces a `8CE5DD02` notification with mode, beam and intensity, also for custom modes. Flash modes are **not** reported. A double click passes through intermediate values before the beam changes. Nothing is sent unsolicited on `FFE0`.
 - The status read right after connecting reflects the real state: `2F 00 01 00 00 FF` = off, `2F 00 01 0F 00 FF` = on.
 - `03 00` / `03 0F` also act while a custom mode is active. `03 0F` then returns with the custom mode's intensity.
 - **No release command.** The spec has none; disconnecting was enough in all tests.
@@ -381,7 +381,7 @@ These runtimes allow a software estimate of the remaining runtime. The manual do
 ## 11. Connections, ANT+ and bike computers
 
 - **The light accepts at least two simultaneous BLE connections.** Confirmed with an HCI capture on the iPhone: the Magicshine app stayed connected for almost 5 minutes without interruption, while a Mac connected seven times in between and read characteristics; the light answered both. Connecting as a second client took 7–10 s instead of about 5 s.
-- **While a Mac held a connection, switching the light on from off with the remote failed repeatedly.** Without a connection, it worked immediately (tested once). The cause is unknown.
+- **The remote keeps working while a client is connected.** In a systematic test, every remote action worked with no client, with a Mac connected (with and without `00`) and with the Magicshine app connected: level changes, full beam, off, and on again after up to about 3 minutes off. In one earlier session, switching on with the remote failed repeatedly while a Mac was connected; that session had connected while the light was off. The cause is unknown and could not be reproduced.
 - ANT+ is independent of BLE and of the remote/Di2 pairing. The light supports the ANT+ Lighting Control profile.
 - **Re-pairing via ANT+ on a Karoo does not touch the custom-mode list.**
 - With the Karoo's **"Auto Control"** on, the Karoo switches the light itself via ANT+. It did so right after pairing, going to 50 % and then off.
@@ -392,8 +392,8 @@ These runtimes allow a software estimate of the remaining runtime. The manual do
 
 1. **Control the light via `8CE5DD03`** (Xingzhe), not via `A2`.
 2. **Never send `A2 … BB` without a matching delete**, and never use it as "off".
-3. **Subscribe to `8CE5DD02`.** It reports every change, including button presses on the light and the remote. Flash modes are not reported.
-4. **Do not hold the connection permanently** if the remote should keep working.
+3. **Subscribe to `8CE5DD02` and send `00`.** The status then reports every change, including button presses on the light and the remote. Without `00`, no notifications arrive. Flash modes are not reported.
+4. **Holding the connection is fine.** The remote and the light's button keep working while a client is connected. Re-test if your client connects while the light is off (see [section 11](#11-connections-ant-and-bike-computers)).
 5. **Turn off "Auto Control" on the bike computer** when controlling via BLE.
 6. **Show the battery as a step** (high / low / critical), not as a fake percentage. Estimate the remaining runtime from the official runtimes and the time spent per level.
 7. **Repair a light with stray custom modes** with the clean-up recipe in [section 7.1](#71-slot-rules-measured), or by deleting the entries in the Magicshine app.
