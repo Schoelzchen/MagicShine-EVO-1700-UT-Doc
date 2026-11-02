@@ -286,7 +286,7 @@ Examples (as sent by the official app):
 - The light reports only these steps; app and ANT+ bike computers show 100 % for most of a ride and then about 20 %.
 - `A4` and the standard `2A19` both read 100 on a full battery.
 - **Below 10 %, the light switches itself to a very low output** and the button LED flashes red. The manual says the level cannot be changed then. In the single discharge recorded for this document, full output could still be selected by hand, but the light then shut down after about 4 minutes. Whether BLE commands still work in this state was not measured.
-- Charging takes about 3 h at 5 V / 2 A (manual). The manual does not state the battery capacity. See the example charge below.
+- Charging takes about 3 h at 5 V / 2 A (manual). The manufacturer states the battery as 3.6 V / 5200 mAh (18.7 Wh). The printed manual of the tested unit does not list it. See the example charge below.
 - **While charging**, BLE and the remote keep working, and the light can be switched on. The status shows the normal off/on mode; the spec's "charging" mode (`17`, decimal 23) was not reported.
 - On the non-UT EVO 1700, lenne0815 measured a full discharge in which `B4` only reported 100 → 50 → 30.
 
@@ -317,7 +317,7 @@ Examples (as sent by the official app):
 | 3:09 | 0 W (charge ends) | 19.5 Wh |
 
 - In this recording, a full charge took about 3 h 09 min and drew about 19.5 Wh from USB, which matches the manual's 3 h. About two thirds of the energy went in during the first 1 h 20 min. After that, the input power tapered off, which is typical of the switch from constant current to constant voltage.
-- The figures are measured at the USB input and include charging losses, so they do not give the battery capacity directly. The recording contains no BLE values, so it does not show how `A4` or `2A19` change during charging. The same caveats as for the discharge apply.
+- The figures are measured at the USB input and include charging losses, so they do not give the battery capacity directly. The 19.5 Wh drawn from USB are only slightly above the rated 18.7 Wh. That would mean a very high charging efficiency, so the battery in this unit probably stores somewhat less than the rated value, or it was not fully empty at the start. The recording contains no BLE values, so it does not show how `A4` or `2A19` change during charging. The same caveats as for the discharge apply.
 
 **Output and runtime** (manual, ANSI FL1, 25 °C, 25 km/h airflow):
 
