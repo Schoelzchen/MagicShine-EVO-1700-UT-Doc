@@ -69,6 +69,20 @@ Never send `DF` to `8CE5DD03`, and never write to the DFU service `FE59`. See [s
 | Radio / bootloader | Nordic Semiconductor SoC with Nordic Secure DFU (`FE59`) |
 | Firmware state | updated via the official Magicshine app before all measurements |
 
+**Manufacturer specifications** (from the [Magicshine Austria product page](https://www.magicshinelights.at/evo-1700-ut), not measured):
+
+| Item | Value |
+|---|---|
+| Max. output | 1700 lm, 10,520 cd, range up to 205 m |
+| Beam | cut-off, 40° |
+| Runtime | up to 14 h (the printed manual lists up to 17 h, see [section 8](#8-battery-and-runtime)) |
+| Battery | Li-ion 3.6 V, 5200 mAh |
+| Charging | USB-C, 2.5 h at 5 V / 2 A (the manual says about 3 h, one measured charge took 3 h 09 min) |
+| Connectivity | FTR LightSync Control (remote MJ-6558, optional), ANT+, Di2 |
+| Water resistance | IPX6 |
+| Head | aluminium, 151 g, 42 × 46 × 53 mm |
+| Mount | magnetic quick-lock, GoPro-style interface, for handlebars 28–35 mm |
+
 **Custom firmware:** Nordic Secure DFU packages are normally signed with the vendor's key, so a modified image would be rejected over the air. Without opening the light and accessing the hardware there is no way forward. Almost everything one could want is available through the Xingzhe profile anyway.
 
 **The non-UT EVO 1700 is a different design.** It has a different GATT layout, an Alibaba AIS OTA service (`FEB3`/`FED4`–`FED8`) instead of Nordic DFU, and no Xingzhe light service. See [lenne0815/karoo-magicshine-controls](https://github.com/lenne0815/karoo-magicshine-controls). Do not assume results transfer between the two.
@@ -286,7 +300,7 @@ Examples (as sent by the official app):
 - The light reports only these steps; app and ANT+ bike computers show 100 % for most of a ride and then about 20 %.
 - `A4` and the standard `2A19` both read 100 on a full battery.
 - **Below 10 %, the light switches itself to a very low output** and the button LED flashes red. The manual says the level cannot be changed then. In the single discharge recorded for this document, full output could still be selected by hand, but the light then shut down after about 4 minutes. Whether BLE commands still work in this state was not measured.
-- Charging takes about 3 h at 5 V / 2 A (manual). The manufacturer states the battery as 3.6 V / 5200 mAh (18.7 Wh). The printed manual of the tested unit does not list it. See the example charge below.
+- Charging takes about 3 h at 5 V / 2 A according to the manual, 2.5 h according to the product page. The product page states the battery as 3.6 V / 5200 mAh (about 18.7 Wh). The printed manual of the tested unit does not list the capacity. See the example charge below.
 - **While charging**, BLE and the remote keep working, and the light can be switched on. The status shows the normal off/on mode; the spec's "charging" mode (`17`, decimal 23) was not reported.
 - On the non-UT EVO 1700, lenne0815 measured a full discharge in which `B4` only reported 100 → 50 → 30.
 
@@ -493,4 +507,5 @@ The trace contains **all** Bluetooth traffic of the iPhone, including other devi
 - [derstrassi/karoofirefly](https://github.com/derstrassi/karoofirefly), [JaJaJim/LightONKaroo](https://github.com/JaJaJim/LightONKaroo): Karoo integration and original Magicshine frames
 - Xingzhe Bluetooth Light Profile: <https://developer.imxingzhe.com/docs/device/light/> (© Shanghai Da Bu Zi Duo Information Technology Co.; only the parts needed here are summarised)
 - Magicshine: EVO 1700 UT user manual, MJ-6558 leaflet and FAQ (facts summarised, not reproduced)
+- Magicshine Austria product page for the EVO 1700 UT: <https://www.magicshinelights.at/evo-1700-ut> (specifications)
 - Tools: [bleak](https://github.com/hbldh/bleak) (Python BLE library), Apple PacketLogger, Wireshark
