@@ -420,7 +420,7 @@ These came up during the investigation and turned out to be wrong or incomplete:
 - **"`A2` with `00` instead of `BB` sets the light only temporarily."** This was observed on an EVO 1300, but the UT simply ignores such frames.
 - **"The slot byte selects low or high beam."** Wrong. It is a slot number; the beam comes from the frame content.
 - **"`AA` restores the factory modes of the affected beam."** Imprecise. `AA` deletes one slot, and the others shift down.
-- **"The light accepts only one connection and stops advertising while connected."** Wrong. An HCI capture showed two simultaneous connections and continued advertising. The earlier impression came from a Mac that did not report advertisements of a light it was connected to itself.
+- **"The light accepts only one connection and stops advertising while connected."** Wrong. An HCI capture showed two simultaneous connections and continued advertising. Gaps in the advertising appeared only while the Mac itself was connected; whether the light or macOS caused them is unclear.
 - **"The Magicshine app connects only briefly on pull-to-refresh."** Wrong. It keeps one permanent connection while open.
 - **"The manual's '□ = full output' is a translation error."** Both descriptions are right. □ is full output; the high-beam mode with selectable levels is reached with ○ double click.
 
