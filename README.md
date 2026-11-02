@@ -313,7 +313,7 @@ Examples (as sent by the official app):
 
 These runtimes allow a software estimate of the remaining runtime. The manual does not mention SOS, although the light supports it via BLE.
 
-**Temperature and other behaviour** (observed, more reliable than the manual's translation):
+**Temperature and other behaviour** (observed; not covered by the manual):
 - Temperature (A1) reached 46 °C in the BLE tests and **over 60 °C** in another test. The light **never switches off because of heat**; it dims down instead.
 - No auto-off. No StVZO approval.
 
@@ -434,7 +434,7 @@ No programming is needed for these steps.
 
 ### 15.1 Preparation
 
-- Close the Magicshine app, or at least leave the light's settings screen. Otherwise other devices cannot reach the light.
+- Close the Magicshine app. Otherwise it writes its stored custom modes back to the light when it connects and adds its own traffic to the capture.
 - Disable bike computer extensions that connect to the light via BLE.
 - Turn off other Bluetooth devices on the iPhone (headphones, watch) to keep captures small.
 
