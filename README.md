@@ -22,9 +22,8 @@ All results were measured on one real unit (firmware 1.0.0 / software 1.0.1) in 
 12. [Notes for developers](#12-notes-for-developers)
 13. [Do-not-send list](#13-do-not-send-list)
 14. [Corrected assumptions](#14-corrected-assumptions)
-15. [Open questions](#15-open-questions)
-16. [Appendix: how to inspect the light with an iPhone and a Mac](#16-appendix-how-to-inspect-the-light-with-an-iphone-and-a-mac)
-17. [Sources and credits](#17-sources-and-credits)
+15. [Appendix: how to inspect the light with an iPhone and a Mac](#15-appendix-how-to-inspect-the-light-with-an-iphone-and-a-mac)
+16. [Sources and credits](#16-sources-and-credits)
 
 ---
 
@@ -426,31 +425,17 @@ These came up during the investigation and turned out to be wrong or incomplete:
 
 ---
 
-## 15. Open questions
-
-- Does `2A19` report finer battery steps during a discharge?
-- Does the light still accept BLE commands below 10 % battery?
-- At which temperature does it start to dim, and is that visible in the `8CE5DD02` intensity?
-- Maximum number of custom-mode slots (≥ 6 confirmed).
-- What do `A6 01`, `FFE2`–`FFE7` and the `2901` descriptors of service `42820001` mean?
-- Exact gesture to clear the pairing on the UT (manual: click + 3 s; other Magicshine manuals: 10 s).
-- Does a held BLE connection always block switching on with the remote?
-- Why did deleting a just-appended last slot block the button once?
-- Do Control Point commands work without `00`? What does intensity above 50 % on the high beam look like?
-
----
-
-## 16. Appendix: how to inspect the light with an iPhone and a Mac
+## 15. Appendix: how to inspect the light with an iPhone and a Mac
 
 No programming is needed for these steps.
 
-### 16.1 Preparation
+### 15.1 Preparation
 
 - Close the Magicshine app, or at least leave the light's settings screen. Otherwise other devices cannot reach the light.
 - Disable bike computer extensions that connect to the light via BLE.
 - Turn off other Bluetooth devices on the iPhone (headphones, watch) to keep captures small.
 
-### 16.2 List the light's services
+### 15.2 List the light's services
 
 1. Install **nRF Connect for Mobile** (Nordic Semiconductor) or **LightBlue** (Punch Through) on the iPhone, or **LightBlue** / **Bluetility** on the Mac.
 2. Scan, select `M2-B0 EVO1700_UT` and connect.
@@ -459,7 +444,7 @@ No programming is needed for these steps.
 
 Apple shows its own device identifier instead of the Bluetooth address. This is normal.
 
-### 16.3 Capture the official Magicshine app
+### 15.3 Capture the official Magicshine app
 
 **One-time setup:**
 1. Sign in at <https://developer.apple.com/bug-reporting/profiles-and-logs/> with a free Apple ID and download the **Bluetooth** profile for iOS. Install it on the iPhone (*Settings → General → VPN & Device Management*) and restart the iPhone if asked. The profile expires after a few days.
@@ -479,7 +464,7 @@ The trace contains **all** Bluetooth traffic of the iPhone, including other devi
 
 ---
 
-## 17. Sources and credits
+## 16. Sources and credits
 
 - [lenne0815/karoo-magicshine-controls](https://github.com/lenne0815/karoo-magicshine-controls): EVO 1700 (non-UT) captures and discharge test
 - [TimFourcode/evo1300](https://github.com/TimFourcode/evo1300): first use of `8CE5DD03` (HORI 1300), observation on the save flag
