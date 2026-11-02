@@ -95,7 +95,7 @@ Never send `DF` to `8CE5DD03`, and never write to the DFU service `FE59`. See [s
 | `42820001-D3E8-480B-95BB-2A34850D4048` | `42820002`–`42820008` | read | Accessory / pairing data as ASCII strings: `42820002` = the light's ANT+ device number (decimal, matches the number shown on the bike computer); `42820004` = **Bluetooth address of the paired MJ-6558 remote** (12 hex digits, no colons); `42820003`/`42820005` = `000000000000`, probably empty slots for further accessories (e.g. Di2); `42820006`–`08` empty. The `2901` descriptors were not read |
 | `FE59` Nordic Secure DFU | `8EC90003-F315-4F60-9FB8-838830DAEA50` | write, indicate | Buttonless DFU. **Never write** |
 
-The advertising contains the Xingzhe light service short UUID `25D4`. While a client is connected, the light stops advertising.
+The advertising contains the Xingzhe light service short UUID `25D4`. The light keeps advertising while another client is connected.
 
 ---
 
@@ -276,7 +276,7 @@ Examples (as sent by the official app):
 - Moving the slider sends a `BB` preview. **"Save" sends nothing.**
 - Back without saving: an existing mode is restored with `BB`; a newly started mode is deleted with `AA`.
 - Delete (swipe left, bin): `AA` on the entry's slot, then the remaining modes are rewritten to their shifted slots.
-- While the app is connected, other clients could not find the light (it stops advertising while a client is connected, see [section 11](#11-connections-ant-and-bike-computers)).
+- **While the app is open, it holds a permanent connection**, also on the overview screen and the light's settings screen, and polls `A1`/`A4` every 20 s. "Pull to refresh" sends nothing over BLE. In the background the connection stays up but polling stops; closing the app disconnects. Other clients can connect at the same time ([section 11](#11-connections-ant-and-bike-computers)).
 - The app's "Light Sensor" and "Motion Detection" switches are greyed out for the UT; it apparently has no ambient light sensor.
 
 ---
@@ -380,8 +380,8 @@ These runtimes allow a software estimate of the remaining runtime. The manual do
 
 ## 11. Connections, ANT+ and bike computers
 
-- **Treat the light as single-connection.** While a client is connected, it stops advertising, so a second device cannot find it. An earlier impression that the Magicshine app stayed connected alongside another client was not confirmed and is probably wrong.
-- **While a BLE client was connected, the light did not advertise, and switching it on from off with the remote failed repeatedly.** Without a connection, it worked immediately (tested once).
+- **The light accepts at least two simultaneous BLE connections.** Confirmed with an HCI capture on the iPhone: the Magicshine app stayed connected for almost 5 minutes without interruption, while a Mac connected seven times in between and read characteristics; the light answered both. Connecting as a second client took 7–10 s instead of about 5 s.
+- **While a Mac held a connection, switching the light on from off with the remote failed repeatedly.** Without a connection, it worked immediately (tested once). The cause is unknown.
 - ANT+ is independent of BLE and of the remote/Di2 pairing. The light supports the ANT+ Lighting Control profile.
 - **Re-pairing via ANT+ on a Karoo does not touch the custom-mode list.**
 - With the Karoo's **"Auto Control"** on, the Karoo switches the light itself via ANT+. It did so right after pairing, going to 50 % and then off.
@@ -420,6 +420,8 @@ These came up during the investigation and turned out to be wrong or incomplete:
 - **"`A2` with `00` instead of `BB` sets the light only temporarily."** This was observed on an EVO 1300, but the UT simply ignores such frames.
 - **"The slot byte selects low or high beam."** Wrong. It is a slot number; the beam comes from the frame content.
 - **"`AA` restores the factory modes of the affected beam."** Imprecise. `AA` deletes one slot, and the others shift down.
+- **"The light accepts only one connection and stops advertising while connected."** Wrong. An HCI capture showed two simultaneous connections and continued advertising. The earlier impression came from a Mac that did not report advertisements of a light it was connected to itself.
+- **"The Magicshine app connects only briefly on pull-to-refresh."** Wrong. It keeps one permanent connection while open.
 - **"The manual's '□ = full output' is a translation error."** Both descriptions are right. □ is full output; the high-beam mode with selectable levels is reached with ○ double click.
 
 ---
