@@ -317,7 +317,7 @@ Examples (as sent by the official app):
 | 3:09 | 0 W (charge ends) | 19.5 Wh |
 
 - In this recording, a full charge took about 3 h 09 min and drew about 19.5 Wh from USB, which matches the manual's 3 h. About two thirds of the energy went in during the first 1 h 20 min. After that, the input power tapered off, which is typical of the switch from constant current to constant voltage.
-- The figures are measured at the USB input and include charging losses, so they do not give the battery capacity directly. The 19.5 Wh drawn from USB are only slightly above the rated 18.7 Wh. That would mean a very high charging efficiency, so the battery in this unit probably stores somewhat less than the rated value, or it was not fully empty at the start. The recording contains no BLE values, so it does not show how `A4` or `2A19` change during charging. The same caveats as for the discharge apply.
+- The figures are measured at the USB input and include charging losses, so they do not give the battery capacity directly. The 19.5 Wh drawn from USB are only slightly above the rated 18.7 Wh. A full 18.7 Wh would mean a charging efficiency of about 96 %, which is unusually high. The battery in this unit therefore probably stores somewhat less than the rated value. The recording contains no BLE values, so it does not show how `A4` or `2A19` change during charging. The same caveats as for the discharge apply.
 
 **Output and runtime** (manual, ANSI FL1, 25 °C, 25 km/h airflow):
 
