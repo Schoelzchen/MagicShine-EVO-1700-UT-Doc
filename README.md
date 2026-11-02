@@ -69,19 +69,22 @@ Never send `DF` to `8CE5DD03`, and never write to the DFU service `FE59`. See [s
 | Radio / bootloader | Nordic Semiconductor SoC with Nordic Secure DFU (`FE59`) |
 | Firmware state | updated via the official Magicshine app before all measurements |
 
-**Manufacturer specifications** (from the [Magicshine Austria product page](https://www.magicshinelights.at/evo-1700-ut), not measured):
+**Published specifications** (not measured). Sources are the [Magicshine product page](https://magicshine.com/products/evo-1700-ut-bike-light) and the [Magicshine Austria distributor page](https://www.magicshinelights.at/evo-1700-ut). A dash means the page does not give the value.
 
-| Item | Value |
-|---|---|
-| Max. output | 1700 lm, 10,520 cd, range up to 205 m |
-| Beam | cut-off, 40° |
-| Runtime | up to 14 h (the printed manual lists up to 17 h, see [section 8](#8-battery-and-runtime)) |
-| Battery | Li-ion 3.6 V, 5200 mAh |
-| Charging | USB-C, 2.5 h at 5 V / 2 A (the manual says about 3 h, one measured charge took 3 h 09 min) |
-| Connectivity | FTR LightSync Control (remote MJ-6558, optional), ANT+, Di2 |
-| Water resistance | IPX6 |
-| Head | aluminium, 151 g, 42 × 46 × 53 mm |
-| Mount | magnetic quick-lock, GoPro-style interface, for handlebars 28–35 mm |
+| Item | Magicshine | Magicshine Austria |
+|---|---|---|
+| Max. output | 1700 lm | 1700 lm, 10,520 cd |
+| Max. throw | 205 m | 205 m |
+| Beam | high beam + low beam | cut-off, 40° |
+| Max. runtime | 17 h | 14 h |
+| Battery | 5200 mAh | Li-ion 3.6 V, 5200 mAh |
+| Charging | 3 h at 5 V / 2 A (full charge) | USB-C, 2.5 h at 5 V / 2 A |
+| Connectivity | ANT+, FTR LightSync, Shimano Di2 | ANT+, FTR LightSync Control (remote MJ-6558, optional), Di2 |
+| Water resistance | IPX6 | IPX6 |
+| Body | aluminium alloy + plastic, 175 g | aluminium, 151 g, 42 × 46 × 53 mm |
+| Mount | – | magnetic quick-lock, GoPro-style interface, for handlebars 28–35 mm |
+
+The Magicshine page agrees with the printed manual (17 h, 3 h charging, same mode table as in [section 8](#8-battery-and-runtime)). The distributor's runtime, charging time and weight differ. One measured charge took 3 h 09 min, see section 8.
 
 **Custom firmware:** Nordic Secure DFU packages are normally signed with the vendor's key, so a modified image would be rejected over the air. Without opening the light and accessing the hardware there is no way forward. Almost everything one could want is available through the Xingzhe profile anyway.
 
@@ -300,7 +303,7 @@ Examples (as sent by the official app):
 - The light reports only these steps; app and ANT+ bike computers show 100 % for most of a ride and then about 20 %.
 - `A4` and the standard `2A19` both read 100 on a full battery.
 - **Below 10 %, the light switches itself to a very low output** and the button LED flashes red. The manual says the level cannot be changed then. In the single discharge recorded for this document, full output could still be selected by hand, but the light then shut down after about 4 minutes. Whether BLE commands still work in this state was not measured.
-- Charging takes about 3 h at 5 V / 2 A according to the manual, 2.5 h according to the product page. The product page states the battery as 3.6 V / 5200 mAh (about 18.7 Wh). The printed manual of the tested unit does not list the capacity. See the example charge below.
+- Charging takes about 3 h at 5 V / 2 A according to the manual and the Magicshine product page (the Austrian distributor states 2.5 h). The battery is specified as 3.6 V / 5200 mAh (about 18.7 Wh). The printed manual of the tested unit does not list the capacity. See the example charge below.
 - **While charging**, BLE and the remote keep working, and the light can be switched on. The status shows the normal off/on mode; the spec's "charging" mode (`17`, decimal 23) was not reported.
 - On the non-UT EVO 1700, lenne0815 measured a full discharge in which `B4` only reported 100 → 50 → 30.
 
@@ -333,7 +336,7 @@ Examples (as sent by the official app):
 - In this recording, a full charge took about 3 h 09 min and drew about 19.5 Wh from USB, which matches the manual's 3 h. About two thirds of the energy went in during the first 1 h 20 min. After that, the input power tapered off, which is typical of the switch from constant current to constant voltage.
 - The figures are measured at the USB input and include charging losses, so they do not give the battery capacity directly. The 19.5 Wh drawn from USB are only slightly above the rated 18.7 Wh. A full 18.7 Wh would mean a charging efficiency of about 96 %, which is unusually high. The battery in this unit therefore probably stores somewhat less than the rated value. The recording contains no BLE values, so it does not show how `A4` or `2A19` change during charging. The same caveats as for the discharge apply.
 
-**Output and runtime** (manual, ANSI FL1, 25 °C, 25 km/h airflow):
+**Output and runtime** (manual and Magicshine product page, which agree; manual conditions: ANSI FL1, 25 °C, 25 km/h airflow):
 
 | Beam | Level | Lumen | Runtime | BLE status intensity |
 |---|---|---|---|---|
@@ -507,5 +510,6 @@ The trace contains **all** Bluetooth traffic of the iPhone, including other devi
 - [derstrassi/karoofirefly](https://github.com/derstrassi/karoofirefly), [JaJaJim/LightONKaroo](https://github.com/JaJaJim/LightONKaroo): Karoo integration and original Magicshine frames
 - Xingzhe Bluetooth Light Profile: <https://developer.imxingzhe.com/docs/device/light/> (© Shanghai Da Bu Zi Duo Information Technology Co.; only the parts needed here are summarised)
 - Magicshine: EVO 1700 UT user manual, MJ-6558 leaflet and FAQ (facts summarised, not reproduced)
-- Magicshine Austria product page for the EVO 1700 UT: <https://www.magicshinelights.at/evo-1700-ut> (specifications)
+- Magicshine product page for the EVO 1700 UT: <https://magicshine.com/products/evo-1700-ut-bike-light> (specifications, mode and runtime table)
+- Magicshine Austria distributor page: <https://www.magicshinelights.at/evo-1700-ut> (specifications)
 - Tools: [bleak](https://github.com/hbldh/bleak) (Python BLE library), Apple PacketLogger, Wireshark
