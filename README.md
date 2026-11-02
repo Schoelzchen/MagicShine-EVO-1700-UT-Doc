@@ -30,7 +30,7 @@ All results were measured on one real unit (firmware 1.0.0 / software 1.0.1) in 
 ## 1. Key findings
 
 1. **Two BLE control paths.** The Magicshine channel (`FFE1`/`FFE0`, command `A2`) only stores *custom modes*. The light also implements the open **Xingzhe "Bluetooth Light Profile"** (`8CE5DD03`). It controls the light directly: **real off/on**, low/high beam, intensity and SOS. Every command is acknowledged within 40–130 ms, and the button modes stay untouched.
-2. **Battery is reported in steps only**, matching the button LED: green 100–21 %, red 20–11 %, flashing red 10–1 %. This is why apps and bike computers jump from 100 % to 20 %. At full output in the cold, the "low" step left about 20 minutes and the whole charge lasted about 1 h 40 min instead of the 3 h in the manual.
+2. **Battery is reported in steps only**, matching the button LED: green 100–21 %, red 20–11 %, flashing red 10–1 %. This is why apps and bike computers jump from 100 % to 20 %. In one example discharge at full output in the cold, the "low" step left about 20 minutes and the whole charge lasted about 1 h 40 min instead of the 3 h in the manual. Your results may differ.
 3. **Custom firmware is practically impossible.** The light uses a Nordic SoC with signed Nordic Secure DFU.
 4. **Existing Karoo extensions (as of November 2026) unintentionally change the button modes.** They send `A2 … BB` for every mode change, and also as "off", but never delete. Afterwards the button cycles only one mode.
 5. **The official Magicshine app keeps custom modes locally** and writes them back to the light every time it connects.
@@ -285,9 +285,12 @@ Examples (as sent by the official app):
 
 - The light reports only these steps; app and ANT+ bike computers show 100 % for most of a ride and then about 20 %.
 - `A4` and the standard `2A19` both read 100 on a full battery.
-- **Below 10 %, the light switches itself to a very low output** and the button LED flashes red. The manual says the level cannot be changed then. In the measured discharge, full output could still be selected by hand, but the light then shut down after about 4 minutes. Whether BLE commands still work in this state was not measured.
+- **Below 10 %, the light switches itself to a very low output** and the button LED flashes red. The manual says the level cannot be changed then. In the single discharge recorded for this document, full output could still be selected by hand, but the light then shut down after about 4 minutes. Whether BLE commands still work in this state was not measured.
+- Charging takes about 3 h at 5 V / 2 A. The manual does not state the battery capacity.
+- **While charging**, BLE and the remote keep working, and the light can be switched on. The status shows the normal off/on mode; the spec's "charging" mode (`17`, decimal 23) was not reported.
+- On the non-UT EVO 1700, lenne0815 measured a full discharge in which `B4` only reported 100 → 50 → 30.
 
-**Measured discharge** (high beam HIGH, 1700 lm, outdoors at 3–4 °C ambient, starting at the 100 % step):
+**Example discharge** (one recording by the tester, one unit, high beam HIGH, 1700 lm, outdoors at 3–4 °C ambient, starting at the 100 % step):
 
 | Elapsed | Reported step | Behaviour |
 |---|---|---|
@@ -296,11 +299,8 @@ Examples (as sent by the official app):
 | 93 min | bike computer "critical" (step 10–1 %) | light drops to a very low output by itself, LED flashes red |
 | 94–98 min | critical | full output selected by hand, light shuts down after about 4 min |
 
-- Total runtime at full output was about 1 h 40 min, well below the 3 h in the manual (measured at 25 °C with airflow).
-- After the change to "low", about 20 minutes of full output remained. After "critical", the light protects itself with a very low output.
-- Charging takes about 3 h at 5 V / 2 A. The manual does not state the battery capacity.
-- **While charging**, BLE and the remote keep working, and the light can be switched on. The status shows the normal off/on mode; the spec's "charging" mode (`17`, decimal 23) was not reported.
-- On the non-UT EVO 1700, lenne0815 measured a full discharge in which `B4` only reported 100 → 50 → 30.
+- In this recording, the runtime at full output was about 1 h 40 min, well below the 3 h in the manual (measured at 25 °C with airflow). About 20 minutes of full output remained after the change to "low".
+- These figures come from a single unit under these specific conditions. Runtimes depend on temperature, airflow, battery age and charge level, and other lights may behave differently. Treat the table as an example, not as a specification.
 
 **Output and runtime** (manual, ANSI FL1, 25 °C, 25 km/h airflow):
 
@@ -398,7 +398,7 @@ These runtimes allow a software estimate of the remaining runtime. The manual do
 3. **Subscribe to `8CE5DD02` and send `00`.** The status then reports every change, including button presses on the light and the remote. Without `00`, no notifications arrive. Flash modes are not reported.
 4. **Holding the connection is fine.** The remote and the light's button keep working while a client is connected, also if the connection was made while the light was off.
 5. **Turn off "Auto Control" on the bike computer** when controlling via BLE.
-6. **Show the battery as a step** (high / low / critical), not as a fake percentage. Estimate the remaining runtime from the time spent per level, and do not trust the official runtimes in the cold (see [section 8](#8-battery-and-runtime)). Treat the change to "low" as a warning that only a short time at full output remains.
+6. **Show the battery as a step** (high / low / critical), not as a fake percentage. Estimate the remaining runtime from the time spent per level, and do not rely on the official runtimes in the cold (see the example in [section 8](#8-battery-and-runtime)). Treat the change to "low" as a warning that the remaining time at full output may be short.
 7. **Repair a light with stray custom modes** with the clean-up recipe in [section 7.1](#71-slot-rules-measured), or by deleting the entries in the Magicshine app.
 8. **Treat a locked light as "not reachable".** With the transport lock on, the light neither advertises nor accepts connections.
 
