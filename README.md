@@ -15,7 +15,7 @@ All results were measured on one real unit (firmware 1.0.0 / software 1.0.1) in 
 5. [Recommended control path: Xingzhe Light Profile](#5-recommended-control-path-xingzhe-light-profile)
 6. [Magicshine protocol (`FFE1` / `FFE0`)](#6-magicshine-protocol-ffe1--ffe0)
 7. [Custom modes and the official app](#7-custom-modes-and-the-official-app)
-8. [Battery, runtime and temperature](#8-battery-runtime-and-temperature)
+8. [Battery and runtime](#8-battery-and-runtime)
 9. [Physical controls](#9-physical-controls)
 10. [MJ-6558 remote ("FTR LightSync")](#10-mj-6558-remote-ftr-lightsync)
 11. [Connections, ANT+ and bike computers](#11-connections-ant-and-bike-computers)
@@ -32,7 +32,7 @@ All results were measured on one real unit (firmware 1.0.0 / software 1.0.1) in 
 1. **Two BLE control paths.** The Magicshine channel (`FFE1`/`FFE0`, command `A2`) only stores *custom modes*. The light also implements the open **Xingzhe "Bluetooth Light Profile"** (`8CE5DD03`). It controls the light directly: **real off/on**, low/high beam, intensity and SOS. Every command is acknowledged within 40–130 ms, and the button modes stay untouched.
 2. **Battery is reported in steps only**, matching the button LED: green 100–21 %, red 20–11 %, flashing red 10–1 %. This is why apps and bike computers jump from 100 % to 20 %.
 3. **Custom firmware is practically impossible.** The light uses a Nordic SoC with signed Nordic Secure DFU.
-4. **Existing Karoo extensions corrupt the button modes.** They send `A2 … BB` for every mode change, and also as "off", but never delete. Afterwards the button cycles only one mode.
+4. **Existing Karoo extensions (as of November 2026) unintentionally change the button modes.** They send `A2 … BB` for every mode change, and also as "off", but never delete. Afterwards the button cycles only one mode.
 5. **The official Magicshine app keeps custom modes locally** and writes them back to the light every time it connects.
 6. **The MJ-6558 remote ("FTR LightSync") is a BLE advertiser.** Its packets carry no ID, but the light stores the remote's Bluetooth address. Listening to the remote works; emulating it is practically impossible.
 
@@ -154,16 +154,9 @@ Functions `10`–`1A` accept `FF` (or `FFFF`/`FFFFFFFF`) as "read current value"
 | Op | Meaning | Parameter | UT |
 |---|---|---|---|
 | `00` | Request Control | – | ✅ works |
-| `01` | Reset device control | – | untested (scope unclear) |
-| `02` | Set light type | u8 | untested (do not send) |
 | `03` | Set light mode | u8 | ✅ `00`, `0F`, `11`; `07` no response |
 | `04` | Beam low/high | `00`/`01` | ✅ works |
-| `05` | Focus | 0–100 | untested; Features say not supported |
 | `06` | Intensity | 0–100 | ✅ works |
-| `07` | Intensity mode manual/auto | `00`/`01` | untested |
-| `08` | Fall detection | `00`/`01` | untested |
-| `09` | Colour | ≤ 4 bytes | untested; light is single-colour |
-| `0A` / `0B` | Training / navigation data | ≤ 18 bytes | untested; format not specified |
 | `10` | Auto-sleep | `00`/`01`/`FF` | ❌ no response |
 | `11` | Wake on motion | `00`/`01`/`FF` | ❌ no response |
 | `12` | Auto-sleep time | u16 30–6000 s / `FFFF` | ❌ no response |
@@ -173,12 +166,13 @@ Functions `10`–`1A` accept `FF` (or `FFFF`/`FFFFFFFF`) as "read current value"
 | `16`–`18` | Team animation / navigation sync / data sync | `00`/`01`/`FF` | ❌ no response |
 | `19` / `1A` | Animation ID / team animation ID | u32 / `FFFFFFFF` | ❌ no response |
 | `24` | Paired remote (`FFFFFFFF` = query) | u32 | ❌ no response |
-| `DA` | Date and time | 8 bytes | untested |
 | `DF` | Enter DFU | – | **never send** |
+
+Not tested (see the spec): `01` reset, `02` light type, `05` focus, `07` intensity mode, `08` fall detection, `09` colour, `0A`/`0B` training and navigation data, `DA` date and time.
 
 ### 5.4 Measured behaviour
 
-- **Latency:** The indication arrives 40–130 ms after the write. This is noticeably faster than control via ANT+.
+- **Latency:** The indication arrives 40–130 ms after the write.
 - **Button modes stay untouched.** This path never creates custom modes.
 - **Disconnect keeps state.** After `03 00` and a disconnect, the light stays off. It advertises again and accepts a new connection within about 1 s. A new `00` plus `03 0F` switches it back on with the last intensity.
 - **Button presses are reported, but only after `00`.** Subscribing to `8CE5DD02` alone delivers no notifications. After `00`, every press on the light's button or the remote produces a `8CE5DD02` notification with mode, beam and intensity, also for custom modes. Flash modes are **not** reported. A double click passes through intermediate values before the beam changes. Nothing is sent unsolicited on `FFE0`.
@@ -262,11 +256,9 @@ Examples (as sent by the official app):
 
 **Safe clean-up:** repeat `AA` on slot `01` (any content) until the ack is `r = 00` (`DE07B60000B1ED`). Then the list is empty and both beams are back to their factory levels.
 
-**Reading custom modes:** There is no list query (`A5` gets no answer). Two partial methods work:
-- **Content:** subscribe to `8CE5DD02` and cycle through the modes with the button. Each press reports the active mode's pattern, beam and intensity.
-- **Count:** send `BB` from a high slot downwards (8, 7, 6, …). Writes beyond the end are rejected; the first accepted slot is count + 1. **But** the accepted `BB` creates a mode, and deleting it again once left the button unresponsive until the list was cleared and `03 0F` was sent. This is not a safe read-only method.
+**Reading custom modes:** There is no list query (`A5` gets no answer). To see the stored modes, subscribe to `8CE5DD02`, send `00` and cycle through the modes with the button. Each press reports the active mode's pattern, beam and intensity.
 
-**"Off" written as `A2`:** `BB` with intensity 0 (`DE14A20101010100000000000000000000BB0DED`) does not switch the light off. It stores a custom mode that the light runs at its minimum (status intensity `01`). KarooFireFly and LightONKaroo (as of November 2026) use exactly this frame as "off". LightONKaroo sends it to every assigned light whenever its settings screen is opened; KarooFireFly sends it after each mode preview. The result is a single, very dim low-beam level on the button.
+**"Off" written as `A2`:** `BB` with intensity 0 (`DE14A20101010100000000000000000000BB0DED`) does not switch the light off. It stores a custom mode that the light runs at its minimum (status intensity `01`). Existing Karoo extensions (as of November 2026) use exactly this frame as "off", for example whenever their settings screen is opened or after a mode preview. The result is a single, very dim low-beam level on the button.
 
 ### 7.2 How the official Magicshine app handles custom modes (iPhone capture)
 
@@ -281,7 +273,7 @@ Examples (as sent by the official app):
 
 ---
 
-## 8. Battery, runtime and temperature
+## 8. Battery and runtime
 
 **Battery indicator** (manual, confirmed by observation):
 
@@ -313,9 +305,7 @@ Examples (as sent by the official app):
 
 These runtimes allow a software estimate of the remaining runtime. The manual does not mention SOS, although the light supports it via BLE.
 
-**Temperature and other behaviour** (observed; not covered by the manual):
-- Temperature (A1) reached 46 °C in the BLE tests and **over 60 °C** in another test. The light **never switches off because of heat**; it dims down instead.
-- No auto-off. No StVZO approval.
+**Other behaviour** (observed): no auto-off. No StVZO marking on the tested unit.
 
 ---
 
@@ -382,7 +372,7 @@ These runtimes allow a software estimate of the remaining runtime. The manual do
 ## 11. Connections, ANT+ and bike computers
 
 - **The light accepts at least two simultaneous BLE connections.** Confirmed with an HCI capture on the iPhone: the Magicshine app stayed connected for almost 5 minutes without interruption, while a Mac connected seven times in between and read characteristics; the light answered both. Connecting as a second client took 7–10 s instead of about 5 s.
-- **The remote keeps working while a client is connected.** In a systematic test, every remote action worked with no client, with a Mac connected (with and without `00`) and with the Magicshine app connected: level changes, full beam, off, and on again after up to about 3 minutes off. This also holds when the connection was established while the light was off. In one early session, switching on with the remote failed repeatedly; this could not be reproduced since.
+- **The remote keeps working while a client is connected.** In a systematic test, every remote action worked with no client, with a Mac connected (with and without `00`) and with the Magicshine app connected: level changes, full beam, off, and on again after up to about 3 minutes off. This also holds when the connection was established while the light was off.
 - ANT+ is independent of BLE and of the remote/Di2 pairing. The light supports the ANT+ Lighting Control profile.
 - **Re-pairing via ANT+ on a Karoo does not touch the custom-mode list.**
 - With the Karoo's **"Auto Control"** on, the Karoo switches the light itself via ANT+. It did so right after pairing, going to 50 % and then off.
@@ -423,8 +413,6 @@ These came up during the investigation and turned out to be wrong or incomplete:
 - **"The slot byte selects low or high beam."** Wrong. It is a slot number; the beam comes from the frame content.
 - **"`AA` restores the factory modes of the affected beam."** Imprecise. `AA` deletes one slot, and the others shift down.
 - **"The light accepts only one connection and stops advertising while connected."** Wrong. An HCI capture showed two simultaneous connections and continued advertising. Gaps in the advertising appeared only while the Mac itself was connected; whether the light or macOS caused them is unclear.
-- **"The Magicshine app connects only briefly on pull-to-refresh."** Wrong. It keeps one permanent connection while open.
-- **"The manual's '□ = full output' is a translation error."** Both descriptions are right. □ is full output; the high-beam mode with selectable levels is reached with ○ double click.
 
 ---
 
