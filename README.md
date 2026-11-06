@@ -30,7 +30,7 @@ All results were measured on one real unit (firmware 1.0.0 / software 1.0.1) in 
 ## 1. Key findings
 
 1. **Two BLE control paths.** The Magicshine channel (`FFE1`/`FFE0`, command `A2`) only stores *custom modes*. The light also implements the open **Xingzhe "Bluetooth Light Profile"** (`8CE5DD03`). It controls the light directly: **real off/on**, low/high beam, intensity and SOS. Every command is acknowledged within 40–130 ms, and the button modes stay untouched.
-2. **Battery is reported in steps only**, matching the button LED: green 100–21 %, red 20–11 %, flashing red 10–1 %. This is why apps and bike computers jump from 100 % to 20 %. In one example discharge at full output in the cold, the "low" step left about 20 minutes and the whole charge lasted about 1 h 40 min instead of the 3 h in the manual. Your results may differ.
+2. **Battery is reported in steps only**, matching the button LED: green 100–21 %, red 20–11 %, flashing red 10–1 %. This is why apps and bike computers jump from 100 % to 20 %. In one example discharge at full output in the cold, the "low" step left about 20 minutes and the whole charge lasted about 1 h 40 min instead of the 3 h in the manual. Two measured charges took about 3 h 09 min and suggest a battery capacity of about 4.3 Ah (~15.5 Wh), roughly 83 % of the rated 5200 mAh. Your results may differ.
 3. **Custom firmware is practically impossible.** The light uses a Nordic SoC with signed Nordic Secure DFU.
 4. **Existing Karoo extensions (as of November 2026) unintentionally change the button modes.** They send `A2 … BB` for every mode change, and also as "off", but never delete. Afterwards the button cycles only one mode.
 5. **The official Magicshine app keeps custom modes locally** and writes them back to the light every time it connects.
@@ -84,7 +84,7 @@ Never send `DF` to `8CE5DD03`, and never write to the DFU service `FE59`. See [s
 | Body | aluminium alloy + plastic, 175 g | aluminium, 151 g, 42 × 46 × 53 mm |
 | Mount | – | magnetic quick-lock, GoPro-style interface, for handlebars 28–35 mm |
 
-The Magicshine page agrees with the printed manual (17 h, 3 h charging, same mode table as in [section 8](#8-battery-and-runtime)). The distributor's runtime, charging time and weight differ. One measured charge took 3 h 09 min, see section 8.
+The Magicshine page agrees with the printed manual (17 h, 3 h charging, same mode table as in [section 8](#8-battery-and-runtime)). The distributor's runtime, charging time and weight differ. Two measured charges took about 3 h 09 min, and the measured energy suggests a capacity of about 4.3 Ah instead of 5200 mAh, see section 8.
 
 **Custom firmware:** Nordic Secure DFU packages are normally signed with the vendor's key, so a modified image would be rejected over the air. Without opening the light and accessing the hardware there is no way forward. Almost everything one could want is available through the Xingzhe profile anyway.
 
@@ -303,7 +303,7 @@ Examples (as sent by the official app):
 - The light reports only these steps; app and ANT+ bike computers show 100 % for most of a ride and then about 20 %.
 - `A4` and the standard `2A19` both read 100 on a full battery.
 - **Below 10 %, the light switches itself to a very low output** and the button LED flashes red. The manual says the level cannot be changed then. In the single discharge recorded for this document, full output could still be selected by hand, but the light then shut down after about 4 minutes. Whether BLE commands still work in this state was not measured.
-- Charging takes about 3 h at 5 V / 2 A according to the manual and the Magicshine product page (the Austrian distributor states 2.5 h). The battery is specified as 3.6 V / 5200 mAh (about 18.7 Wh). The printed manual of the tested unit does not list the capacity. See the example charge below.
+- Charging takes about 3 h at 5 V / 2 A according to the manual and the Magicshine product page (the Austrian distributor states 2.5 h). The battery is specified as 3.6 V / 5200 mAh (about 18.7 Wh). The printed manual of the tested unit does not list the capacity. Two measured charges suggest about 4.3 Ah (~15.5 Wh), see the example charges below.
 - **While charging**, BLE and the remote keep working, and the light can be switched on. The status shows the normal off/on mode; the spec's "charging" mode (`17`, decimal 23) was not reported.
 - On the non-UT EVO 1700, lenne0815 measured a full discharge in which `B4` only reported 100 → 50 → 30.
 
@@ -319,22 +319,38 @@ Examples (as sent by the official app):
 - In this recording, the runtime at full output was about 1 h 40 min, well below the 3 h in the manual (measured at 25 °C with airflow). About 20 minutes of full output remained after the change to "low".
 - These figures come from a single unit under these specific conditions. Runtimes depend on temperature, airflow, battery age and charge level, and other lights may behave differently. Treat the table as an example, not as a specification.
 
-**Example charge** (one recording by the tester, same unit, from empty after the light had shut itself off, 45 W USB-C charger, measured with a USB power meter on the input side):
+**Example charges** (two recordings by the tester, same unit, 45 W USB-C charger, measured with a USB power meter on the input side). The meter display was filmed as an iPhone time-lapse and read frame by frame. Run 2 has one data point every 16 s (read by OCR, checked against power = voltage × current), run 1 one point about every 3 min (blurry video, read by hand).
 
-| Elapsed | Input power | Energy charged |
+![Measured charge curves](charging/charge-curves.svg)
+
+| | Run 1 (2026-11-02) | Run 2 (2026-11-04) |
 |---|---|---|
-| 0:00 | 9.0 W | 0 Wh |
-| 0:30 | 9.7 W | 4.7 Wh |
-| 1:00 | 10.2 W | 9.8 Wh |
-| 1:19 | 10.3 W (peak) | 13.0 Wh |
-| 1:30 | 6.9 W | 14.6 Wh |
-| 2:00 | 3.6 W | 16.9 Wh |
-| 2:30 | 2.5 W | 18.4 Wh |
-| 3:00 | 1.3 W | 19.4 Wh |
-| 3:09 | 0 W (charge ends) | 19.5 Wh |
+| Start | empty, after the light had shut itself off | below 10 % (flashing red), not fully empty |
+| Charging time until the charger stops | 3:08:35 h | 3:09:17 h |
+| Energy drawn from USB | 19.54 Wh (3780 mAh at ~5.17 V) | 19.48 Wh (3769 mAh); **19.10 Wh** after removing 4 min of light use during charging |
+| Input power at start | ~9.0 W | ~8.9 W |
+| Peak input power (end of constant current) | 10.48 W (2.02 A) | 10.42 W (2.01 A) |
+| Switch to constant voltage | ~1:16–1:19 h, at ~12.4–13.0 Wh | 1:15 h, at 12.3 Wh |
+| Charger stops at | ~0.18 A (~0.9 W) | ~0.19 A (~1.0 W) |
 
-- In this recording, a full charge took about 3 h 09 min and drew about 19.5 Wh from USB, which matches the manual's 3 h. About two thirds of the energy went in during the first 1 h 20 min. After that, the input power tapered off, which is typical of the switch from constant current to constant voltage.
-- The figures are measured at the USB input and include charging losses, so they do not give the battery capacity directly. The 19.5 Wh drawn from USB are only slightly above the rated 18.7 Wh. A full 18.7 Wh would mean a charging efficiency of about 96 %, which is unusually high. The battery in this unit therefore probably stores somewhat less than the rated value. The recording contains no BLE values, so it does not show how `A4` or `2A19` change during charging. The same caveats as for the discharge apply.
+| Elapsed | Run 1: input power / energy | Run 2: input power / energy |
+|---|---|---|
+| 0:00 | 9.0 W / 0 Wh | 8.8 W / 0 Wh |
+| 0:30 | 9.7 W / 4.7 Wh | 9.7 W / 4.7 Wh |
+| 1:00 | 10.2 W / 9.7 Wh | 10.1 W / 9.6 Wh |
+| 1:30 | 6.9 W / 14.6 Wh | 6.2 W / 14.3 Wh |
+| 2:00 | 3.6 W / 16.9 Wh | 3.5 W / 16.5 Wh |
+| 2:30 | 2.4 W / 18.4 Wh | 2.4 W / 17.9 Wh |
+| 3:00 | 1.3 W / 19.4 Wh | 1.3 W / 18.9 Wh |
+| end | 0 W / 19.54 Wh | 0 W / 19.10 Wh |
+
+- **Charging profile:** constant current for the first ~1 h 15 min, with the input power rising from ~9 to ~10.5 W as the cell voltage rises. Then constant voltage: the power tapers off for almost 2 hours, and about a third of the energy goes in during this phase. The total of about 3 h 09 min matches the manual's 3 h.
+- **Run 2 correction:** the light was switched on for 4 minutes at 2:24–2:28 h while charging (input jumped to ~1.4 A / 7.4 W), followed by a few minutes of extra recharging. For this period the input power was replaced by a straight line between the last undisturbed value before and the first value back on the constant-voltage trend. The difference of 0.38 Wh was subtracted from all later energy values.
+- **Consistency:** run 2 needed 0.44 Wh (about 2 %) less than run 1, which fits its small remaining charge. Its slightly earlier switch to constant voltage points the same way.
+- **Estimated battery capacity:** the figures are measured at the USB input and include charging losses. Assuming a charger efficiency of about 0.88 (0.85–0.92) and a mean cell voltage of about 4.0 V while charging, run 1 gives 19.54 Wh × 0.88 ÷ 4.0 V ≈ **4.3 Ah (range 4.1–4.5 Ah), about 15.5 Wh at 3.6 V**. That is roughly **83 % (80–87 %) of the rated 5200 mAh / 18.7 Wh**, or about 2150 mAh per 18500 cell. A rated 18.7 Wh would require a charging efficiency of about 96 %, which is unusually high.
+- With ~15.5 Wh, the example discharge above corresponds to an average of about 9.5 W at full output.
+- The recordings contain no BLE values, so they do not show how `A4` or `2A19` change during charging. The same caveats as for the discharge apply: one unit, one charger, room temperature.
+- Raw and corrected data points (773 rows, with the origin of every value) are in [`charging/charge-curves.csv`](charging/charge-curves.csv); [`charging/plot_charge_curves.py`](charging/plot_charge_curves.py) recreates the chart (Python 3, matplotlib).
 
 **Output and runtime** (manual and Magicshine product page, which agree; manual conditions: ANSI FL1, 25 °C, 25 km/h airflow):
 
@@ -512,4 +528,4 @@ The trace contains **all** Bluetooth traffic of the iPhone, including other devi
 - Magicshine: EVO 1700 UT user manual, MJ-6558 leaflet and FAQ (facts summarised, not reproduced)
 - Magicshine product page for the EVO 1700 UT: <https://magicshine.com/products/evo-1700-ut-bike-light> (specifications, mode and runtime table)
 - Magicshine Austria distributor page: <https://www.magicshinelights.at/evo-1700-ut> (specifications)
-- Tools: [bleak](https://github.com/hbldh/bleak) (Python BLE library), Apple PacketLogger, Wireshark
+- Tools: [bleak](https://github.com/hbldh/bleak) (Python BLE library), Apple PacketLogger, Wireshark, [Tesseract](https://github.com/tesseract-ocr/tesseract) (reading the charge recordings), matplotlib
