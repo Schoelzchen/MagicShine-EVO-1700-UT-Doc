@@ -228,6 +228,33 @@ DE <len> <cmd> <data …> <xor> ED
 
 The official app polls `A1` and `A4` every 20 s. Projects written for other lamps locate the temperature by searching for the byte pattern `17 03`. That pattern does not occur on the UT; use the fixed position instead.
 
+### 6.2.1 Response byte layout (decoded from the firmware)
+
+The app firmware (`com.zhongben.magicshine` 1.2.6, decompiled) was used to decode the response payloads. Data bytes are counted from `0` (the byte after the `status` byte, i.e. frame byte 4).
+
+**`B4` – battery.** The payload carries the **cell voltage**, not just the coarse step:
+
+| Data byte | Field | Example (`…04000000640000…`) |
+|---|---|---|
+| 0 | cell voltage, whole volts | `04` = 4 V |
+| 1 | cell voltage, tenths | `00` → 4.0 V |
+| 2–3 | always `00` | |
+| 4 | coarse charge step % (100 / 20 / 10 / 0) | `64` = 100 |
+| 5–12 | always `00` | |
+
+The firmware computes the voltage as `(ADC × 3600/4095) × 2`, i.e. a single Li-ion cell read through a 2:1 divider, rounded to 0.1 V. Byte 1 is a real tenths digit: six reads in a row gave 4.0 V and 4.1 V (`…0400…` and `…0401…`), so it is not fixed. **A client can therefore ignore byte 4 and compute its own fine percentage from bytes 0–1 with a proper discharge curve** — this is the only way to get a smooth gauge without new firmware. Limits: 0.1 V resolution and load-dependent sag, so smooth the value.
+
+**`B1` – info.**
+
+| Data byte | Field | Example (`…001118071B0103`) |
+|---|---|---|
+| 0–3 | fixed constant `00 11 18 07` | never changes; probably a version/signature |
+| 4 | temperature in °C | `1B` = 27 °C |
+| 5 | temperature sign (`01` = ≥ 0 °C, `00` = below) | `01` |
+| 6 | fixed constant `03` | |
+
+**`AB` → `BB` and `AC` → `BC`.** In the firmware the payload is the fixed constant `00 FF` (`local_78 = 0xff00`); there is no sensor read behind it. These commands return no real data on the UT, so the "speed sensor" / "light sensor" labels carry nothing usable.
+
 ### 6.3 `A2` – custom modes (not live control)
 
 ```
@@ -300,7 +327,7 @@ Examples (as sent by the official app):
 | steady red | 20–11 % |
 | flashing red | 10–1 % (while charging: charging) |
 
-- The light reports only these steps; app and ANT+ bike computers show 100 % for most of a ride and then about 20 %.
+- The light reports only these steps *as a percentage*; app and ANT+ bike computers show 100 % for most of a ride and then about 20 %. But the `B4` response also carries the raw cell voltage (0.1 V resolution) in data bytes 0–1 — see [section 6.2.1](#621-response-byte-layout-decoded-from-the-firmware). A client can build a much finer gauge from that voltage instead of the step.
 - `A4` and the standard `2A19` both read 100 on a full battery.
 - **Below 10 %, the light switches itself to a very low output** and the button LED flashes red. The manual says the level cannot be changed then. In the single discharge recorded for this document, full output could still be selected by hand, but the light then shut down after about 4 minutes. Whether BLE commands still work in this state was not measured.
 - Charging takes about 3 h at 5 V / 2 A according to the manual and the Magicshine product page (the Austrian distributor states 2.5 h). The battery is specified as 3.6 V / 5200 mAh (about 18.7 Wh). The printed manual of the tested unit does not list the capacity. Two measured charges suggest about 4.3 Ah (~15.5 Wh), see the example charges below.
